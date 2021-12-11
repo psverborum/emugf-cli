@@ -43,6 +43,13 @@ def create_games_table(game_name)
   document = Nokogiri::HTML(html)
 
   games_array_table = []
+
+  # TODO: (or not todo) I don't know maybe i should create a pagination for this
+  #
+  # In any case, the page does not display all games by the search query.
+  # I don't know how many exactly but I decided to take 10 from the very top.
+  # I'm not sure if someone will try to find the game by name
+  # but in the end they will get lost in 10 menu items. I'll think about it.... Maybe
   limit = 12
 
   table = document.at('table')
@@ -109,7 +116,9 @@ def download_game(game_num)
 end
 
 system 'clear'
-
+# TODO: Add consoles choice in the menu, i guess...
+#
+# TODO: So actually i should upgrade menu, i dont like it!
 loop do
   $games = []
   puts 'Enter the title of the game'
