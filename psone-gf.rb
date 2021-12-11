@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'uri'
 require 'net/http'
 require 'nokogiri'
@@ -36,4 +38,4 @@ def create_games_table(game_name)
   print_games_table(games_array_table)
 end
 
-print_games_table(gets.chomp.to_str)
+create_games_table(gets.chomp.to_str)
