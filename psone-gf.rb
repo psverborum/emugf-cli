@@ -11,6 +11,7 @@ require 'uri'
 require 'net/http'
 require 'nokogiri'
 require 'terminal-table'
+require 'down/net_http'
 
 $BASE_URI = 'https://vimm.net'
 $SEARCH_QUERY = '/vault/?p=list&system=PS1&q='
@@ -49,11 +50,15 @@ def create_games_table(game_name)
   return false if table.nil?
 
   table.search('tr').each do |row|
-    games_array_table << (row.search('th, td').map { |cell| cell.text.strip })
+    game = (row.search('th, td').map { |cell| cell.text.strip })
+    games_array_table << game
 
     if limit < 12
       link = row.at('a')['href']
-      $games << link
+      $games << {
+        'link' => link,
+        'title' => game[0]
+      }
     end
 
     break if (limit -= 1).zero?
@@ -71,36 +76,34 @@ end
 def download_game(game_num)
   return true unless $games.length.times.include?(game_num)
 
-  # uri = URI($BASE_URI + $games[game_num].to_str)
-  #
-  uri = URI('https://download2.vimm.net/download/?mediaId=4944')
-
-  req = Net::HTTP::Get.new(uri)
+  uri = URI($BASE_URI + $games[game_num].to_str)
 
   # I really hate you vimm and your browser is acting funny." 400 page.
-  req['Accept-Encoding']           = 'gzip, deflate, br'
-  req['Connection']                = 'keep-alive'
-  req['Accept']                    = 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8'
-  req['Host']                      = 'download2.vimm.net'
-  req['Referer']                   = $BASE_URI + $games[game_num].to_str
-  req['User-Agent']                = 'Mozilla/5.0'
-  req['Accept-Language']           = 'en-US,en;q=0.5'
-  req['Sec-Fetch-Dest']            = 'document'
-  req['Sec-Fetch-Mode']            = 'navigate'
-  req['Sec-Fetch-Site']            = 'same-site'
-  req['Sec-Fetch-User']            = '?1'
-  req['Upgrade-Insecure-Requests'] = 1
+  headers = {
+    'Accept-Encoding' => 'gzip, deflate, br',
+    'Connection' => 'keep-alive',
+    'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+    'Host' => 'download2.vimm.net',
+    'Referer' => 'https://vimm.net/vault/6116',
+    'User-Agent' => 'Mozilla/5.0',
+    'Accept-Language' => 'en-US,en;q=0.5',
+    'Sec-Fetch-Dest' => 'document',
+    'Sec-Fetch-Mode' => 'navigate',
+    'Sec-Fetch-Site' => 'same-site',
+    'Sec-Fetch-User' => '?1',
+    'Upgrade-Insecure-Requests' => '1'
+  }
 
-  game_archive = Net::HTTP.start(uri.hostname, uri.port) do |http|
-    http.request(req)
-  end
+  # Super Mario Bros url for tests
+  # uri = URI('https://download2.vimm.net/download/?mediaId=818')
 
-  File.open('out.zip', 'w') do |f|
+  # TODO: Add progress bar
+  game_archive = Down::NetHttp.download(uri, headers: headers).open.gets
+
+  # TODO: Add custom download directories
+  File.open($games[game_num]['title'], 'w') do |f|
     f.write(game_archive)
   end
-
-  puts 'УРААААААААА YAAAAAAY'
-  sleep 10
 
   false
 end
@@ -111,12 +114,12 @@ loop do
   $games = []
   puts 'Enter the title of the game'
   print '-> '
-  input = 'tekken' #gets.chomp.to_str
+  input = gets.chomp.to_str
 
   if create_games_table input
     puts 'Enter the game\'s num (q for back to search)'
     print '-> '
-    input = '2'#gets.chomp.to_str
+    input = gets.chomp.to_str
 
     if input == 'q'
       system 'clear'
