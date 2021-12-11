@@ -40,7 +40,7 @@ def create_games_table(game_name)
   uri += game_name
 
   html     = Net::HTTP.get(URI(uri))
-  document = Nokogiri::HTML(html)
+  document = Nokogiri::HTML html
 
   games_array_table = []
 
@@ -52,7 +52,7 @@ def create_games_table(game_name)
   # but in the end they will get lost in 10 menu items. I'll think about it.... Maybe
   limit = 12
 
-  table = document.at('table')
+  table = document.at 'table'
 
   return false if table.nil?
 
@@ -124,6 +124,7 @@ loop do
   puts 'Enter the title of the game'
   print '-> '
   input = gets.chomp.to_str
+  system 'clear'
 
   if create_games_table input
     puts 'Enter the game\'s num (q for back to search)'
@@ -135,7 +136,7 @@ loop do
       next
     end
 
-    if download_game(input.chomp.to_i)
+    if download_game input.chomp.to_i
       system 'clear'
       puts "\e[41mSaik! Dat was WRONG NUMBA!\e[0m"
       next
