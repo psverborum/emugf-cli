@@ -83,7 +83,7 @@ end
 def download_game(game_num)
   return true unless $games.length.times.include?(game_num)
 
-  uri = URI($BASE_URI + $games[game_num].to_str)
+  uri = URI($BASE_URI + $games[game_num]['link'].to_str)
 
   # I really hate you vimm and your browser is acting funny." 400 page.
   headers = {
