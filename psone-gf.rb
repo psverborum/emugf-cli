@@ -1,3 +1,10 @@
+#!/usr/bin/env ruby
+#
+# Created by VERBORUM
+#
+# Github:   github.com/GarrryJ
+# Telegram: @verborum
+#
 # frozen_string_literal: true
 
 require 'uri'
