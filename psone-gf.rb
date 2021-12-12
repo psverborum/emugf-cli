@@ -11,10 +11,10 @@ require 'uri'
 require 'net/http'
 require 'nokogiri'
 require 'terminal-table'
-require 'down/net_http'
 
-$BASE_URI = 'https://vimm.net'
+$BASE_URI     = 'https://vimm.net'
 $SEARCH_QUERY = '/vault/?p=list&system=PS1&q='
+$DOWNLOAD_URI = 'download2.vimm.net'
 
 # @param [String] games
 #
@@ -83,7 +83,12 @@ end
 def download_game(game_num)
   return true unless $games.length.times.include?(game_num)
 
-  uri = URI($BASE_URI + $games[game_num]['link'].to_str)
+  referer_uri = $BASE_URI + $games[game_num]['link'].to_str
+
+  html     = Net::HTTP.get(URI(referer_uri))
+  document = Nokogiri::HTML html
+
+  download_route = "/download/?mediaId=#{document.at('input[name="mediaId"]')['value'].to_str}"
 
   # I really hate you vimm and your browser is acting funny." 400 page.
   headers = {
@@ -104,13 +109,50 @@ def download_game(game_num)
   # Super Mario Bros url for tests
   # uri = URI('https://download2.vimm.net/download/?mediaId=818')
 
-  # TODO: Add progress bar
-  game_archive = Down::NetHttp.download(uri, headers: headers).open.gets
+  # TODO: Fix segmented loading
+  Net::HTTP.start($DOWNLOAD_URI) do |http|
+    f = open($games[game_num]['title'], 'wb')
+    begin
+      http.request_get(download_route,
+                       'Accept-Encoding' => 'gzip, deflate, br',
+                       'Connection' => 'keep-alive',
+                       'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+                       'Host' => 'download2.vimm.net',
+                       'Referer' => 'https://vimm.net/vault/6116',
+                       'User-Agent' => 'Mozilla/5.0',
+                       'Accept-Language' => 'en-US,en;q=0.5',
+                       'Sec-Fetch-Dest' => 'document',
+                       'Sec-Fetch-Mode' => 'navigate',
+                       'Sec-Fetch-Site' => 'same-site',
+                       'Sec-Fetch-User' => '?1',
+                       'Upgrade-Insecure-Requests' => '1') do |resp|
+        resp.read_body do |segment|
+          f.write(segment)
+        end
+      end
+    ensure
+      f.close()
+    end
 
-  # TODO: Add custom download directories
-  File.open($games[game_num]['title'], 'w') do |f|
-    f.write(game_archive)
+    # resp = http.get(download_route,
+    #                 'Accept-Encoding' => 'gzip, deflate, br',
+    #                 'Connection' => 'keep-alive',
+    #                 'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+    #                 'Host' => 'download2.vimm.net',
+    #                 'Referer' => 'https://vimm.net/vault/6116',
+    #                 'User-Agent' => 'Mozilla/5.0',
+    #                 'Accept-Language' => 'en-US,en;q=0.5',
+    #                 'Sec-Fetch-Dest' => 'document',
+    #                 'Sec-Fetch-Mode' => 'navigate',
+    #                 'Sec-Fetch-Site' => 'same-site',
+    #                 'Sec-Fetch-User' => '?1',
+    #                 'Upgrade-Insecure-Requests' => '1')
+    # open($games[game_num]['title'], 'wb') do |file|
+    #   file.write(resp.body)
+    # end
   end
+
+  puts 'Done.'
 
   false
 end
