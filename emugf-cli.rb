@@ -18,8 +18,8 @@ $DOWNLOAD_URI = 'download2.vimm.net'
 # @param [String] games
 #
 def print_games_table(games)
-  header = %w[Title Players Year Serial Rating]
-  games.delete header
+  header = games[0]
+  games.delete games[0]
 
   game_count = games.length
 
@@ -167,31 +167,35 @@ loop do
   console = gets.chomp.to_str
   system 'clear'
 
-  puts 'Enter the title of the game'
-  print '-> '
-  search_query = gets.chomp.to_str
-  system 'clear'
-
-  query = "/vault/?p=list&system=#{console}&q=#{search_query}"
-
-  if create_games_table query
-    puts 'Enter the game\'s num (q for back to search)'
+  loop do
+    puts "Enter the title of the #{console} game (q for back to console changing)"
     print '-> '
-    input = gets.chomp.to_str
-
-    if input == 'q'
-      system 'clear'
-      next
-    end
-
-    if download_game input.chomp.to_i
-      system 'clear'
-      puts "\e[41mSaik! Dat was WRONG NUMBA!\e[0m"
-      next
-    end
-  else
+    search_query = gets.chomp.to_str
     system 'clear'
-    puts "\e[41mNothing found... Try something else\e[0m"
-    next
+
+    break if search_query == 'q'
+
+    query = "/vault/?p=list&system=#{console}&q=#{search_query}"
+
+    if create_games_table query
+      puts 'Enter the game\'s num (q for back to search)'
+      print '-> '
+      input = gets.chomp.to_str
+
+      if input == 'q'
+        system 'clear'
+        next
+      end
+
+      if download_game input.chomp.to_i
+        system 'clear'
+        puts "\e[41mSaik! Dat was WRONG NUMBA!\e[0m"
+        next
+      end
+    else
+      system 'clear'
+      puts "\e[41mNothing found... Try something else\e[0m"
+      next
+    end
   end
 end
