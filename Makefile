@@ -4,10 +4,10 @@ all: install
 
 install:
 	bundle install
-	cp psone-gf.rb $(DESTDIR)$(PREFIX)/bin/psone-gf
-	chmod 0755 $(DESTDIR)$(PREFIX)/bin/psone-gf
+	cp emugf-cli.rb $(DESTDIR)$(PREFIX)/bin/emugf-cli
+	chmod 0755 $(DESTDIR)$(PREFIX)/bin/emugf-cli
 uninstall:
-	$(RM) $(DESTDIR)$(PREFIX)/bin/psone-gf
+	$(RM) $(DESTDIR)$(PREFIX)/bin/emugf-cli
 
 
 .PHONY: all install uninstall
