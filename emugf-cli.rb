@@ -13,7 +13,6 @@ require 'nokogiri'
 require 'terminal-table'
 
 $BASE_URI     = 'https://vimm.net'
-$SEARCH_QUERY = '/vault/?p=list&system=PS1&q='
 $DOWNLOAD_URI = 'download2.vimm.net'
 
 # @param [String] games
@@ -31,13 +30,12 @@ def print_games_table(games)
   puts Terminal::Table.new rows: games, headings: (['№'] + header)
 end
 
-# @param  [String] game_name
+# @param  [String] query
 #
 # @return [TrueClass, FalseClass]
 #
-def create_games_table(game_name)
-  uri  = $BASE_URI + $SEARCH_QUERY
-  uri += game_name
+def create_games_table(query)
+  uri  = $BASE_URI + query
 
   html     = Net::HTTP.get(URI(uri))
   document = Nokogiri::HTML html
@@ -157,18 +155,26 @@ def download_game(game_num)
   false
 end
 
+############################################################
 system 'clear'
 # TODO: Add consoles choice in the menu, i guess...
 #
 # TODO: So actually i should upgrade menu, i dont like it!
 loop do
   $games = []
-  puts 'Enter the title of the game'
+  puts 'Choose your console'
   print '-> '
-  input = gets.chomp.to_str
+  console = gets.chomp.to_str
   system 'clear'
 
-  if create_games_table input
+  puts 'Enter the title of the game'
+  print '-> '
+  search_query = gets.chomp.to_str
+  system 'clear'
+
+  query = "/vault/?p=list&system=#{console}&q=#{search_query}"
+
+  if create_games_table query
     puts 'Enter the game\'s num (q for back to search)'
     print '-> '
     input = gets.chomp.to_str
