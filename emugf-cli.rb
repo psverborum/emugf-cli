@@ -89,25 +89,25 @@ def download_game(game_num)
   download_route = "/download/?mediaId=#{document.at('input[name="mediaId"]')['value'].to_str}"
 
   # I really hate you vimm and your browser is acting funny." 400 page.
-  headers = {
-    'Accept-Encoding' => 'gzip, deflate, br',
-    'Connection' => 'keep-alive',
-    'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
-    'Host' => 'download2.vimm.net',
-    'Referer' => 'https://vimm.net/vault/6116',
-    'User-Agent' => 'Mozilla/5.0',
-    'Accept-Language' => 'en-US,en;q=0.5',
-    'Sec-Fetch-Dest' => 'document',
-    'Sec-Fetch-Mode' => 'navigate',
-    'Sec-Fetch-Site' => 'same-site',
-    'Sec-Fetch-User' => '?1',
-    'Upgrade-Insecure-Requests' => '1'
-  }
+  # headers = {
+  #     'Accept-Encoding' => 'gzip, deflate, br',
+  #     'Connection' => 'keep-alive',
+  #     'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+  #     'Host' => 'download2.vimm.net',
+  #     'Referer' => 'https://vimm.net/vault/6116',
+  #     'User-Agent' => 'Mozilla/5.0',
+  #     'Accept-Language' => 'en-US,en;q=0.5',
+  #     'Sec-Fetch-Dest' => 'document',
+  #     'Sec-Fetch-Mode' => 'navigate',
+  #     'Sec-Fetch-Site' => 'same-site',
+  #     'Sec-Fetch-User' => '?1',
+  #     'Upgrade-Insecure-Requests' => '1'
+  # }
 
-  # Super Mario Bros url for tests
-  # uri = URI('https://download2.vimm.net/download/?mediaId=818')
+    # Super Mario Bros url for tests
+    # uri = URI('https://download2.vimm.net/download/?mediaId=818')
 
-  # TODO: Fix segmented loading
+    # TODO: Fix segmented loading
   Net::HTTP.start($DOWNLOAD_URI) do |http|
     f = open($games[game_num]['title'], 'wb')
     begin
@@ -128,26 +128,9 @@ def download_game(game_num)
           f.write(segment)
         end
       end
-    ensure
-      f.close()
+  ensure
+    f.close
     end
-
-    # resp = http.get(download_route,
-    #                 'Accept-Encoding' => 'gzip, deflate, br',
-    #                 'Connection' => 'keep-alive',
-    #                 'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
-    #                 'Host' => 'download2.vimm.net',
-    #                 'Referer' => 'https://vimm.net/vault/6116',
-    #                 'User-Agent' => 'Mozilla/5.0',
-    #                 'Accept-Language' => 'en-US,en;q=0.5',
-    #                 'Sec-Fetch-Dest' => 'document',
-    #                 'Sec-Fetch-Mode' => 'navigate',
-    #                 'Sec-Fetch-Site' => 'same-site',
-    #                 'Sec-Fetch-User' => '?1',
-    #                 'Upgrade-Insecure-Requests' => '1')
-    # open($games[game_num]['title'], 'wb') do |file|
-    #   file.write(resp.body)
-    # end
   end
 
   puts 'Done.'
@@ -197,5 +180,8 @@ loop do
       puts "\e[41mNothing found... Try something else\e[0m"
       next
     end
+
+    system 'clear'
+    puts "\e[42m#{'Done!'}\e[0m"
   end
 end
