@@ -11,9 +11,10 @@ require 'uri'
 require 'net/http'
 require 'nokogiri'
 require 'terminal-table'
+require 'ruby-progressbar'
 
 $BASE_URI     = 'https://vimm.net'
-$DOWNLOAD_URI = 'download2.vimm.net'
+$DOWNLOAD_URI = 'https://download2.vimm.net'
 
 # @param [String] games
 #
@@ -35,7 +36,7 @@ end
 # @return [TrueClass, FalseClass]
 #
 def create_games_table(query)
-  uri  = $BASE_URI + query
+  uri = $BASE_URI + query
 
   html     = Net::HTTP.get(URI(uri))
   document = Nokogiri::HTML html
@@ -86,59 +87,51 @@ def download_game(game_num)
   html     = Net::HTTP.get(URI(referer_uri))
   document = Nokogiri::HTML html
 
-  download_route = "/download/?mediaId=#{document.at('input[name="mediaId"]')['value'].to_str}"
+  uri_str = "#{$DOWNLOAD_URI}/download/?mediaId=#{document.at('input[name="mediaId"]')['value'].to_str}"
 
-  # I really hate you vimm and your browser is acting funny." 400 page.
-  # headers = {
-  #     'Accept-Encoding' => 'gzip, deflate, br',
-  #     'Connection' => 'keep-alive',
-  #     'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
-  #     'Host' => 'download2.vimm.net',
-  #     'Referer' => 'https://vimm.net/vault/6116',
-  #     'User-Agent' => 'Mozilla/5.0',
-  #     'Accept-Language' => 'en-US,en;q=0.5',
-  #     'Sec-Fetch-Dest' => 'document',
-  #     'Sec-Fetch-Mode' => 'navigate',
-  #     'Sec-Fetch-Site' => 'same-site',
-  #     'Sec-Fetch-User' => '?1',
-  #     'Upgrade-Insecure-Requests' => '1'
-  # }
+  uri = URI(uri_str)
 
-    # Super Mario Bros url for tests
-    # uri = URI('https://download2.vimm.net/download/?mediaId=818')
+  puts "Downloading #{$games[game_num]['title']}"
 
-    # TODO: Fix segmented loading
-  Net::HTTP.start($DOWNLOAD_URI) do |http|
-    f = open($games[game_num]['title'], 'wb')
-    begin
-      http.request_get(download_route,
-                       'Accept-Encoding' => 'gzip, deflate, br',
-                       'Connection' => 'keep-alive',
-                       'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
-                       'Host' => 'download2.vimm.net',
-                       'Referer' => 'https://vimm.net/vault/6116',
-                       'User-Agent' => 'Mozilla/5.0',
-                       'Accept-Language' => 'en-US,en;q=0.5',
-                       'Sec-Fetch-Dest' => 'document',
-                       'Sec-Fetch-Mode' => 'navigate',
-                       'Sec-Fetch-Site' => 'same-site',
-                       'Sec-Fetch-User' => '?1',
-                       'Upgrade-Insecure-Requests' => '1') do |resp|
-        resp.read_body do |segment|
-          f.write(segment)
+  progressbar = ProgressBar.create(format: '%a %b>%i %p%% %t',
+                                   progress_mark: '=',
+                                   remainder_mark: '-')
+
+  Net::HTTP.start(uri.host, uri.port,
+                  use_ssl: uri.scheme == 'https') do |http|
+    request = Net::HTTP::Get.new(uri)
+    request['Accept'] = 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8'
+    request['Host'] = 'download2.vimm.net'
+    request['Referer'] = 'https://vimm.net/'
+    request['User-Agent'] = 'Mozilla/5.0'
+    request['Accept-Language'] = 'en-US,en;q=0.5'
+    request['Sec-Fetch-Dest'] = 'document'
+    request['Sec-Fetch-Mode'] = 'navigate'
+    request['Sec-Fetch-Site'] = 'same-site'
+    request['Sec-Fetch-User'] = '?1'
+    request['Upgrade-Insecure-Requests'] = '1'
+
+    http.request request do |response|
+      file_size = response['content-length'].to_i
+      amount_downloaded = 0
+
+      open($games[game_num]['title'], 'wb') do |io|
+        response.read_body do |chunk|
+          io.write chunk
+          amount_downloaded += chunk.size
+          progressbar.progress = (amount_downloaded.to_f / file_size) * 100
         end
       end
-  ensure
-    f.close
     end
   end
 
+  system 'clear'
   puts 'Done.'
 
   false
 end
 
-############################################################
+########################################################################################################################
 system 'clear'
 # TODO: Add consoles choice in the menu, i guess...
 #
