@@ -12,6 +12,7 @@ require 'net/http'
 require 'nokogiri'
 require 'terminal-table'
 require 'ruby-progressbar'
+require 'etc'
 
 $BASE_URI     = 'https://vimm.net'
 $DOWNLOAD_URI = 'https://download2.vimm.net'
@@ -91,7 +92,7 @@ def download_game(game_num)
 
   uri = URI(uri_str)
 
-  puts "Downloading #{$games[game_num]['title']}"
+  puts "Downloading #{$games[game_num]['title']} to #{$SAVING_DIRECTORY} directory"
 
   progressbar = ProgressBar.create(format: '%a %b>%i %p%% %t',
                                    progress_mark: '=',
@@ -115,7 +116,7 @@ def download_game(game_num)
       file_size = response['content-length'].to_i
       amount_downloaded = 0
 
-      open($games[game_num]['title'], 'wb') do |io|
+      open($SAVING_DIRECTORY+$games[game_num]['title'], 'wb') do |io|
         response.read_body do |chunk|
           io.write chunk
           amount_downloaded += chunk.size
@@ -133,10 +134,37 @@ end
 
 ########################################################################################################################
 system 'clear'
+is_dir = false
 # TODO: Add consoles choice in the menu, i guess...
 #
 # TODO: So actually i should upgrade menu, i dont like it!
 loop do
+  if is_dir
+    puts 'Change the saving directory? [y/N]'
+    print '-> '
+    input = gets.chomp.to_str
+
+    is_dir = false if %w[y Y].include?(input)
+  end
+
+  unless is_dir
+    $SAVING_DIRECTORY = "/home/#{Etc.getlogin}/Downloads"
+    puts "Write the saving directory (Enter for default #{$SAVING_DIRECTORY})"
+    print '-> '
+    input = gets.chomp.to_str
+
+    $SAVING_DIRECTORY = input unless [''].include?(input)
+
+    unless File.directory?($SAVING_DIRECTORY)
+      system 'clear'
+      puts "\e[41mNo such directory #{$SAVING_DIRECTORY}\e[0m"
+      next
+    end
+
+    system 'clear'
+    is_dir = true
+  end
+
   $games = []
   puts 'Choose your console'
   print '-> '
@@ -175,6 +203,6 @@ loop do
     end
 
     system 'clear'
-    puts "\e[42m#{'Done!'}\e[0m"
+    puts "\e[42mDone!\e[0m"
   end
 end
