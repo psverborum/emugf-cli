@@ -1,6 +1,6 @@
 # Games finder for emulators cli
 
-emu-gf-cli is a Ruby cli app for search and download games from vimm.net website
+emugf-cli is a Ruby cli app for search and download games from vimm.net website
 
 ## What you need to install
 
