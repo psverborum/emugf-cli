@@ -196,8 +196,6 @@ loop do
     is_dir = true
   end
 
-  $games = []
-
   print_consoles_table
   puts 'Choose your console'
   print '-> '
@@ -212,6 +210,7 @@ loop do
   console = consoles[num]
 
   loop do
+    $games = []
     puts "Enter the title of the #{console} game for searching (q for back to console changing)"
     print '-> '
     search_query = gets.chomp.to_str
