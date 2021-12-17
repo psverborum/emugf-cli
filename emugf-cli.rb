@@ -32,6 +32,24 @@ def print_games_table(games)
   puts Terminal::Table.new rows: games, headings: (['№'] + header)
 end
 
+def print_consoles_table
+  puts Terminal::Table.new rows: [
+    [0, 'Nintendo'],
+    [1, 'Genesis'],
+    [2, 'SuperNintendo'],
+    [3, 'Saturn'],
+    [4, 'PlayStation'],
+    [5, 'Nintendo'],
+    [6, 'Dreamcast'],
+    [7, 'PlayStation2'],
+    [8, 'Xbox'],
+    [9, 'GameCube'],
+    [10, 'PlayStation3'],
+    [11, 'Wii'],
+    [12, 'WiiWare']
+  ], headings: %w[№ Console-Name]
+end
+
 # @param  [String] query
 #
 # @return [TrueClass, FalseClass]
@@ -135,9 +153,22 @@ end
 ########################################################################################################################
 system 'clear'
 is_dir = false
-# TODO: Add consoles choice in the menu, i guess...
-#
-# TODO: So actually i should upgrade menu, i dont like it!
+consoles = %w[
+  NES
+  Genesis
+  SNES
+  Saturn
+  PS1
+  N64
+  Dreamcast
+  PS2
+  Xbox
+  GameCube
+  PS3
+  Wii
+  WiiWare
+]
+
 loop do
   if is_dir
     puts 'Change the saving directory? [y/N]'
@@ -166,13 +197,22 @@ loop do
   end
 
   $games = []
+
+  print_consoles_table
   puts 'Choose your console'
   print '-> '
-  console = gets.chomp.to_str
+  num = gets.chomp.to_i
   system 'clear'
 
+  unless num >= 0 && num <= 12
+    puts "\e[41mWrong number...\e[0m"
+    next
+  end
+
+  console = consoles[num]
+
   loop do
-    puts "Enter the title of the #{console} game (q for back to console changing)"
+    puts "Enter the title of the #{console} game for searching (q for back to console changing)"
     print '-> '
     search_query = gets.chomp.to_str
     system 'clear'
