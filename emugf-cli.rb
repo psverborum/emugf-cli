@@ -158,7 +158,6 @@ def download_game(game_num)
     end
   end
 
-
   system 'clear'
   puts 'Done.'
 
