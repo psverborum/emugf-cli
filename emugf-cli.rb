@@ -13,6 +13,7 @@ require 'nokogiri'
 require 'terminal-table'
 require 'ruby-progressbar'
 require 'etc'
+require 'zip'
 
 $BASE_URI     = 'https://vimm.net'
 $DOWNLOAD_URI = 'https://download2.vimm.net'
@@ -116,6 +117,8 @@ def download_game(game_num)
                                    progress_mark: '=',
                                    remainder_mark: '-')
 
+  full_path = $SAVING_DIRECTORY+$games[game_num]['title']
+
   Net::HTTP.start(uri.host, uri.port,
                   use_ssl: uri.scheme == 'https') do |http|
     request = Net::HTTP::Get.new(uri)
@@ -134,7 +137,7 @@ def download_game(game_num)
       file_size = response['content-length'].to_i
       amount_downloaded = 0
 
-      open($SAVING_DIRECTORY+$games[game_num]['title'], 'wb') do |io|
+      open(full_path, 'wb') do |io|
         response.read_body do |chunk|
           io.write chunk
           amount_downloaded += chunk.size
@@ -144,10 +147,36 @@ def download_game(game_num)
     end
   end
 
+  extract_game $games[game_num]['title']
+
+  begin
+    f = File.open(full_path, 'r')
+  ensure
+    if !f.nil? && File.exist?(f)
+      f.close unless f.closed?
+      File.delete(f)
+    end
+  end
+
+
   system 'clear'
   puts 'Done.'
 
   false
+end
+
+# TODO: Add progressbar here
+def extract_game(file_name)
+  path = "#{$SAVING_DIRECTORY}#{file_name.gsub(/\s/, '-').downcase}/"
+  file_path = $SAVING_DIRECTORY + file_name
+  FileUtils.mkdir_p(path)
+  Zip::File.open(file_path) do |zip_file|
+    zip_file.each do |f|
+      f_path = File.join(path, f.name)
+      FileUtils.mkdir_p(File.dirname(f_path))
+      zip_file.extract(f, f_path) unless File.exist?(f_path)
+    end
+  end
 end
 
 ########################################################################################################################
@@ -179,7 +208,7 @@ loop do
   end
 
   unless is_dir
-    $SAVING_DIRECTORY = "/home/#{Etc.getlogin}/Downloads"
+    $SAVING_DIRECTORY = "/home/#{Etc.getlogin}/Downloads/"
     puts "Write the saving directory (Enter for default #{$SAVING_DIRECTORY})"
     print '-> '
     input = gets.chomp.to_str
